@@ -1,0 +1,23 @@
+{
+  /*
+   | This file is automatically updated by ModManifestBuilder
+   | when the project is compiled.
+   | 
+   | Changes made to this file may be overwritten.
+   | 
+   */
+  "$schema": "https://smapi.io/schemas/manifest.json",
+  "UniqueID": "tlitookilakin.ProfessionBooks",
+  "Name": "Profession Books",
+  "Author": "tlitookilakin",
+  "Version": "1.0.0-Debug",
+  "Description": "Adds books to grant professions you don't have.",
+  "MinimumApiVersion": "4.1",
+  "EntryDll": "ProfessionBooks.dll",
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.SpaceCore",
+      "MinimumVersion": "1.26.0"
+    }
+  ]
+}
