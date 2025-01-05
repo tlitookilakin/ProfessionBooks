@@ -78,7 +78,6 @@ namespace ProfessionBooks.Framework
 
 			var professions = SkillManager.GetUnownedForSkill(SkillId, Game1.player).ToList();
 
-			// TODO add profession names to notifs
 			if (professions.Count == 0)
 			{
 				SkillManager.AddXpToSkill(SkillId, Game1.player, 1000);
@@ -87,8 +86,14 @@ namespace ProfessionBooks.Framework
 			}
 			else
 			{
-				Game1.player.professions.Add(professions[Game1.random.Next(professions.Count)]);
-				Game1.showGlobalMessage(Helper.Translation.Get("msg.learnedProfession"));
+				var selected = professions[Game1.random.Next(professions.Count)];
+				var name = SkillManager.GetProfessionName(selected);
+				var an = Utility.AOrAn(name);
+
+				Game1.player.professions.Add(selected);
+
+				var fmat = string.Format(Helper.Translation.Get("msg.learnedProfession"), an, name);
+				Game1.showGlobalMessage(fmat);
 
 				if (professions.Count == 1)
 					Game1.player.stats.Set($"ProfessionBooks_Skill_{SkillId}", 1);

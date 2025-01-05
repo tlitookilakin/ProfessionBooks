@@ -1,6 +1,6 @@
 ﻿{
   "item.book.name": "{0} For Experts",
   "item.book.desc": "Grants a random {0} profession, or a substantial amount of xp if you have them all.",
-  "msg.learnedProfession": "Learned a new profession!",
+  "msg.learnedProfession": "You taught yourself to be {0} {1}!",
   "msg.gainedExp": "Gained Exp!"
 }

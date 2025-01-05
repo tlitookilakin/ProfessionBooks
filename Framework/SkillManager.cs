@@ -1,31 +1,25 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ProfessionBooks.Integration;
-using StardewModdingAPI;
+using ProfessionBooks.API;
 using StardewValley;
 
 namespace ProfessionBooks.Framework
 {
-	public static class SkillManager
+    public static class SkillManager
 	{
-		private static IMonitor Monitor = null!;
-		private static IModHelper Helper = null!;
 		private static readonly Dictionary<string, ISkill> Skills = new(StringComparer.OrdinalIgnoreCase);
-		private static readonly string[] vanillaSkills = ["farming", "fishing", "foraging", "mining", "combat"];
+		private static readonly Dictionary<int, Func<string>> ProfessionNames = [];
 
-		internal static void Init(IModHelper helper, IMonitor monitor)
+		internal static void Init()
 		{
-			Monitor = monitor;
-			Helper = helper;
+			API.API.AddSkills(Skills);
 
-			for (int i = 0; i < vanillaSkills.Length; i++)
-				Skills[vanillaSkills[i]] = new VanillaSkill(i);
-		}
+			foreach ((var k, var v) in Skills)
+				API.API.AddProfessions(k, v.Professions);
 
-		public static void AddSkills(IEnumerable<KeyValuePair<string, ISkill>> toAdd)
-		{
-			foreach (var pair in toAdd)
-				Skills.TryAdd(pair.Key, pair.Value);
+			var allProfessions = Skills.SelectMany(sk => sk.Value.Professions);
+			foreach (var pair in allProfessions)
+				ProfessionNames[pair.Key] = pair.Value;
 		}
 
 		public static Action<SpriteBatch, Rectangle, Color, float> GetIconDraw(string skill)
@@ -38,11 +32,8 @@ namespace ProfessionBooks.Framework
 
 		public static void AddXpToSkill(string which, Farmer who, int amount)
 		{
-			int ind = Array.IndexOf(vanillaSkills, which);
-			if (ind >= 0)
-				who.gainExperience(ind, amount);
-			else
-				Space.AddXp(who, which, amount);
+			if (Skills.TryGetValue(which, out var sk))
+				sk.AddXp(amount, who);
 		}
 
 		public static IEnumerable<int> GetUnownedForSkill(string skill, Farmer who)
@@ -50,16 +41,16 @@ namespace ProfessionBooks.Framework
 			if (!Skills.TryGetValue(skill, out var sk))
 				return [];
 
-			return sk.Professions.Where(p => !who.professions.Contains(p));
+			return sk.Professions.Where(p => !who.professions.Contains(p.Key)).Select(p => p.Key);
 		}
 
 		public static IEnumerable<KeyValuePair<string, int>> GetAllUnowned(Farmer who)
 		{
 			return Skills.SelectMany(
 				sk => sk.Value.Professions.Where(
-					p => !who.professions.Contains(p)
+					p => !who.professions.Contains(p.Key)
 				).Select(
-					p => new KeyValuePair<string, int>(sk.Key, p)
+					p => new KeyValuePair<string, int>(sk.Key, p.Key)
 				)
 			);
 		}
@@ -77,6 +68,14 @@ namespace ProfessionBooks.Framework
 		public static bool HasSkill(string skill)
 		{
 			return Skills.ContainsKey(skill);
+		}
+
+		public static string GetProfessionName(int which)
+		{
+			if (!ProfessionNames.TryGetValue(which, out var GetName))
+				return "???";
+
+			return GetName();
 		}
 	}
 }
