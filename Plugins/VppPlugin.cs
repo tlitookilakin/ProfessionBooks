@@ -1,5 +1,6 @@
 ﻿using ProfessionBooks.API;
 using StardewModdingAPI;
+using StardewValley;
 using System.Reflection;
 
 namespace ProfessionBooks.Plugins
@@ -46,7 +47,9 @@ namespace ProfessionBooks.Plugins
 				if (pair.Value.Skill == which) 
 				{
 					string name = pair.Key;
-					Professions.Add(new(pair.Value.ID, (Func<string>)(() => name)));
+					Professions.Add(new(pair.Value.ID, (Func<string>)(
+						() => Game1.content.LoadString("Strings\\UI:LevelUp_ProfessionName_" + name)
+					)));
 				}
 			}
 		}
