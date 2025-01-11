@@ -2,6 +2,7 @@
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley.GameData.Objects;
+using StardewValley.GameData.Shops;
 
 namespace ProfessionBooks.Framework
 {
@@ -18,7 +19,6 @@ namespace ProfessionBooks.Framework
 			Helper = helper;
 
 			helper.Events.Content.AssetRequested += Requested;
-			//helper.GameContent.InvalidateCache("Data/Objects");
 		}
 
 		private static void Requested(object? sender, AssetRequestedEventArgs e)
@@ -27,6 +27,8 @@ namespace ProfessionBooks.Framework
 				e.Edit(AddItem);
 			else if (e.NameWithoutLocale.IsEquivalentTo(ITEM_SHEET))
 				e.LoadFromModFile<Texture2D>("Assets/items.png", AssetLoadPriority.Low);
+			else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+				e.Edit(EditShops);
 		}
 
 		private static void AddItem(IAssetData asset)
@@ -45,8 +47,44 @@ namespace ProfessionBooks.Framework
 				Type = "Basic",
 				Price = 250_000,
 				ExcludeFromShippingCollection = true,
+				ExcludeFromRandomSale = true,
 				ContextTags = ["color_sand"]
 			};
+		}
+
+		private static void EditShops(IAssetData asset)
+		{
+			if (asset.Data is not Dictionary<string, ShopData> shops)
+				return;
+
+			if (shops.TryGetValue("Bookseller", out var bookseller))
+			{
+				bookseller.Items.Add(new()
+				{
+					Id = "ProfessionBook",
+					ItemId = "ProfessionBooks_Book",
+					MaxItems = 3,
+					AvailableStockLimit = LimitedStockMode.Player,
+					AvailableStock = 1,
+					PerItemCondition = "ProfessionBooks_Available this",
+					UseObjectDataPrice = true
+				});
+			}
+
+			if (shops.TryGetValue("Traveler", out var traveler))
+			{
+				traveler.Items.Add(new()
+				{
+					Id = "ProfessionBook",
+					ItemId = "ProfessionBooks_Book",
+					MaxItems = 1,
+					AvailableStockLimit = LimitedStockMode.Player,
+					AvailableStock = 1,
+					PerItemCondition = "ProfessionBooks_Available this",
+					Condition = "SYNCED_RANDOM day cart_profession_book .1",
+					UseObjectDataPrice = true
+				});
+			}
 		}
 	}
 }

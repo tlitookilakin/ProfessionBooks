@@ -1,5 +1,6 @@
 ﻿using StardewValley;
 using StardewValley.Delegates;
+using StardewValley.Extensions;
 
 namespace ProfessionBooks.Framework
 {
@@ -12,13 +13,18 @@ namespace ProfessionBooks.Framework
 
 		public static bool IsAvailable(string[] query, GameStateQueryContext context)
 		{
-			var which = query.Length < 1 ? "Any" : query[0];
-			var player = query.Length < 2 ? "Current" : query[1];
+			var which = query.Length < 2 ? "Any" : query[1];
+			var player = query.Length < 3 ? "Target" : query[2];
 
-			return GameStateQuery.Helpers.WithPlayer(context.Player, query[1],
+			return GameStateQuery.Helpers.WithPlayer(context.Player, player,
 				who => who.stats.Get("MasteryExp") != 0 && (
-					which.Equals("any", StringComparison.OrdinalIgnoreCase) ?
-					SkillManager.GetAllUnowned(who).Any() :
+
+					(which.EqualsIgnoreCase("any") && 
+						SkillManager.GetAllUnowned(who).Any()) ||
+
+					(which.EqualsIgnoreCase("this") && context.TargetItem is Skillbook book && 
+						SkillManager.GetUnownedForSkill(book.SkillId, who).Any()) ||
+
 					SkillManager.GetUnownedForSkill(which, who).Any()
 				)
 			);

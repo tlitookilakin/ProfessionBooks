@@ -4,6 +4,7 @@ using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
+using System.Runtime.Intrinsics.X86;
 using System.Xml.Serialization;
 
 namespace ProfessionBooks.Framework
@@ -74,14 +75,13 @@ namespace ProfessionBooks.Framework
 			if (Game1.player.swimming.Value || Game1.player.bathingClothes.Value || Game1.player.onBridge.Value)
 				return base.performUseAction(location);
 
-			ReadBook(location);
-
 			var professions = SkillManager.GetUnownedForSkill(SkillId, Game1.player).ToList();
+			string message;
 
 			if (professions.Count == 0)
 			{
 				SkillManager.AddXpToSkill(SkillId, Game1.player, 1000);
-				Game1.showGlobalMessage(Helper.Translation.Get("msg.gainedExp"));
+				message = Helper.Translation.Get("msg.gainedExp");
 				Game1.player.stats.Set($"ProfessionBooks_Skill_{SkillId}", 1);
 			}
 			else
@@ -92,14 +92,15 @@ namespace ProfessionBooks.Framework
 
 				Game1.player.professions.Add(selected);
 
-				var fmat = string.Format(Helper.Translation.Get("msg.learnedProfession"), an, name);
-				Game1.showGlobalMessage(fmat);
+				message = string.Format(Helper.Translation.Get("msg.learnedProfession"), an, name);
 
 				if (professions.Count == 1)
 					Game1.player.stats.Set($"ProfessionBooks_Skill_{SkillId}", 1);
 				else
 					Game1.player.stats.Set($"ProfessionBooks_Skill_{SkillId}", 0);
 			}
+
+			ReadBook(location, message);
 
 			return true;
 		}
@@ -230,8 +231,10 @@ namespace ProfessionBooks.Framework
 			return other is Skillbook book && book.SkillId == SkillId && base.canStackWith(other);
 		}
 
-		private void ReadBook(GameLocation where)
+		private void ReadBook(GameLocation where, string message)
 		{
+			bool messageShown = false;
+
 			Game1.player.canMove = false;
 			Game1.player.freezePause = 1030;
 			Game1.player.faceDirection(2);
@@ -243,6 +246,9 @@ namespace ProfessionBooks.Framework
 					{
 						where.removeTemporarySpritesWithID(1987654);
 						Utility.addRainbowStarExplosion(where, Game1.player.getStandingPosition() + new Vector2(-40f, -156f), 8);
+						if (!messageShown)
+							Game1.showGlobalMessage(message);
+						messageShown = true;
 					}
 				}
 			]);
