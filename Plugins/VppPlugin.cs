@@ -8,9 +8,10 @@ namespace ProfessionBooks.Plugins
 	public class VppPlugin : IPlugin
 	{
 		private const string ID = "KediDili.VanillaPlusProfessions";
-		private bool enabled = false;
-		private IEnumerable<dynamic> data = null!;
 		private static readonly string[] Skills = ["farming", "fishing", "foraging", "mining", "combat"];
+
+		public static Action<string, IList<KeyValuePair<int, Func<string>>>> AddProfession
+			= static (s, p) => { };
 
 		internal VppPlugin(IModHelper helper)
 		{
@@ -18,7 +19,7 @@ namespace ProfessionBooks.Plugins
 				return;
 
 			var asm = helper.ModRegistry.GetApi(ID)!.GetType().Assembly;
-			var entry = asm.GetType("ModEntry");
+			var entry = asm.GetType("VanillaPlusProfessions.ModEntry");
 
 			if (entry is null)
 				return;
@@ -28,30 +29,37 @@ namespace ProfessionBooks.Plugins
 			if (field is null)
 				return;
 
-			data = (IEnumerable<dynamic>)field.GetValue(null)!;
-			enabled = true;
+			var data = field.GetValue(null)!;
+			var valType = data.GetType().GetGenericArguments()[1];
+
+			AddProfession = typeof(VppPlugin)
+				.GetMethod(nameof(AddProfessionsImpl), BindingFlags.Static | BindingFlags.NonPublic)!
+				.MakeGenericMethod(valType).CreateDelegate<Action<string, IList<KeyValuePair<int, Func<string>>>>>(data);
 		}
 
-		public void AddProfessions(string skill, IList<KeyValuePair<int, Func<string>>> Professions)
+		private static void AddProfessionsImpl<T>(Dictionary<string, T> data, string skill, IList<KeyValuePair<int, Func<string>>> Professions)
+			where T : class
 		{
-			if (!enabled)
-				return;
-
 			int which = Array.IndexOf(Skills, skill);
 
 			if (which == -1)
 				return;
 
-			foreach (var pair in data) 
+			foreach ((var key, dynamic value) in data)
 			{
-				if (pair.Value.Skill == which) 
+				if (value.Skill == which)
 				{
-					string name = pair.Key;
-					Professions.Add(new(pair.Value.ID, (Func<string>)(
+					string name = key;
+					Professions.Add(new(value.ID, (Func<string>)(
 						() => Game1.content.LoadString("Strings\\UI:LevelUp_ProfessionName_" + name)
 					)));
 				}
 			}
+		}
+
+		public void AddProfessions(string skill, IList<KeyValuePair<int, Func<string>>> Professions)
+		{
+			AddProfession(skill, Professions);
 		}
 	}
 }

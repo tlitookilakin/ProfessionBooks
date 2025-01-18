@@ -3,7 +3,7 @@ using StardewModdingAPI;
 
 namespace ProfessionBooks.API
 {
-	internal class API : IAPI
+	public class API : IAPI
 	{
 		private static readonly List<IPlugin> Plugins = [];
 		internal static API api = new();
