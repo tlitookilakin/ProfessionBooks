@@ -1,4 +1,5 @@
 ﻿using ProfessionBooks.Framework;
+using ProfessionBooks.Integration;
 using ProfessionBooks.Plugins;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -21,6 +22,10 @@ namespace ProfessionBooks
 			SpacePlugin.Init(Helper);
 			ItemQuery.Init(Monitor);
 			GSQ.Init();
+
+#if DEBUG
+			IItemSpawnerAPI.Init(Helper);
+#endif
 
 			Helper.Events.GameLoop.OneSecondUpdateTicked += LateInit;
 		}
