@@ -1,0 +1,6 @@
+{
+  "item.book.name": " {0} 供专业使用",
+  "item.book.desc": "随机获得 {0} 专业技能,如果玩家拥有全部职业,则获取大量的经验值.",
+  "msg.learnedProfession": "玩家通过自学成为 {0} {1}!",
+  "msg.gainedExp": "获得经验!"
+}
